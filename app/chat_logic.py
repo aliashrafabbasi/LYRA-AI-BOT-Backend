@@ -7,7 +7,16 @@ import os
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 
-llm = ChatGroq(api_key=api_key, model="openai/gpt-oss-120b")
+# LLM with improved parameters for accuracy
+llm = ChatGroq(
+    api_key=api_key,
+    model="openai/gpt-oss-120b",
+    temperature=0.2,        # Lower temperature = more precise answers
+    max_tokens=500,         # Limit response length for clarity
+    top_p=0.9,              # Focus on more probable tokens
+    frequency_penalty=0.5,  # Reduce repetition
+    presence_penalty=0.3    # Encourage new content
+)
 
 prompt = ChatPromptTemplate.from_template(
     "You are Lyra, an intelligent and approachable AI assistant.\n"
@@ -20,7 +29,6 @@ prompt = ChatPromptTemplate.from_template(
     "- Maintain a warm, friendly, and engaging tone.\n"
     "- If asked about your creator, always reply: 'My creator is Mr. Ali Ashraf.'"
 )
-
 
 output_parser = StrOutputParser()
 
