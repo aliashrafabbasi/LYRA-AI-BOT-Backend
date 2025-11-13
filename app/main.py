@@ -3,12 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from chat_db import save_message, get_chat_history, new_chat_session, get_user_chats
 from chat_logic import get_ai_response
+import uvicorn
+import os
 
 app = FastAPI(title="Lyra Chat API")
 
+# CORS Setup: Frontend URL (replace with Netlify URL) or "*" for demo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # For demo, change to ["https://lyra-ai-bot.netlify.app"] in production
     allow_methods=["*"],
     allow_headers=["*"]
 )
@@ -40,7 +43,11 @@ def chat_endpoint(request: ChatRequest):
 
     # Generate AI response using LangChain Groq
     history = get_chat_history(request.chat_id)
-    ai_response = get_ai_response(request.message, request.user, mood="", history=history)
+
+    # Use API key from environment variable (example)
+    api_key = os.environ.get("GROQ_API_KEY")  # set this in Render dashboard
+    ai_response = get_ai_response(request.message, request.user, mood="", history=history, api_key=api_key)
+
     save_message(request.chat_id, request.user, request.message, ai_response)
     return {"chat_id": request.chat_id, "ai_response": ai_response}
 
@@ -53,3 +60,8 @@ def history_endpoint(request: HistoryRequest):
 def user_chats(request: NewChatRequest):
     chats = get_user_chats(request.user)
     return {"chats": chats}
+
+# Render-friendly port configuration
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
